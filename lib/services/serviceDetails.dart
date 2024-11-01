@@ -1,17 +1,19 @@
+// ignore_for_file: unused_element, use_build_context_synchronously
+
+import 'package:finders_v1_1/Client/appointment_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AppointmentDetailsPage extends StatelessWidget {
+class ServiceDetailsPage extends StatelessWidget {
   final String
       appointmentReference; // Document ID passed from the previous page.
 
-  const AppointmentDetailsPage({super.key, required this.appointmentReference});
+  const ServiceDetailsPage({super.key, required this.appointmentReference});
 
   Future<DocumentSnapshot> _fetchAppointmentDetails() async {
     return await FirebaseFirestore.instance
         .collection('appointments')
-        .doc(
-            appointmentReference) // Fetch document using the passed document ID.
+        .doc(appointmentReference) // Fetch document using the passed document ID.
         .get();
   }
 
@@ -31,8 +33,12 @@ class AppointmentDetailsPage extends StatelessWidget {
               TextButton(
                 child: const Text('Cancel'),
                 onPressed: () {
-                  Navigator.of(context).popAndPushNamed(
-                      '/appointmentPage'); // Close the dialog go to previous page
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AppointmentPage(),
+                    ),
+                  ); // Close the dialog and go to previous page
                 },
               ),
               TextButton(
@@ -96,25 +102,36 @@ class AppointmentDetailsPage extends StatelessWidget {
 
           var appointmentData = snapshot.data!.data() as Map<String, dynamic>;
 
-          // Extracting fields
+          // Extract fields
           String companyName = appointmentData['companyName'] ?? 'N/A';
-
-          // Handle 'services' as a List
-          var services = appointmentData['services'];
-          String servicesText;
-          if (services is List) {
-            servicesText =
-                services.join(', '); // Join list into a comma-separated string
-          } else {
-            servicesText = services ??
-                'N/A'; // If not a list, treat it as a single string or fallback to N/A
-          }
-
           String status = appointmentData['status'] ?? 'N/A';
           String userId = appointmentData['userId'] ?? 'N/A';
           String address = appointmentData['address'] ?? 'N/A';
-          double? totalPrice = appointmentData['totalPrice'];
           Timestamp date = appointmentData['date'];
+
+          // Handle 'services' as a List
+          var services = appointmentData['services'];
+          String servicesText = '';
+          if (services is List) {
+            servicesText = services.map((service) => service.toString()).join(', ');
+          } else if (services is Map) {
+            servicesText = services.values.join(', ');
+          } else {
+            servicesText = services.toString();
+          }
+
+          // Handle 'quantities' as a List
+          var quantities = appointmentData['quantities'] ?? [];
+          String quantitiesText =
+              quantities is List ? quantities.join(', ') : 'N/A';
+
+          // Handle totalPrice as either int or double
+          double? totalPrice;
+          if (appointmentData['totalPrice'] is int) {
+            totalPrice = (appointmentData['totalPrice'] as int).toDouble();
+          } else {
+            totalPrice = appointmentData['totalPrice'] as double?;
+          }
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -131,25 +148,27 @@ class AppointmentDetailsPage extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text('Service(s): $servicesText'),
                 const SizedBox(height: 10),
-                Text(
-                    'Amount: ${totalPrice != null ? 'R${totalPrice.toStringAsFixed(2)}' : 'N/A'}'),
+                Text('Quantities: $quantitiesText',
+                    style: const TextStyle(fontSize: 16)),
+                const SizedBox(height: 10),
+                Text('Amount: ${totalPrice != null ? 'R$totalPrice' : 'N/A'}'),
                 const SizedBox(height: 10),
                 Text('Status: $status'),
                 const SizedBox(height: 10),
                 Text('Address: $address'),
                 const SizedBox(height: 40),
-                if (status == 'pending') ...[
-                  ElevatedButton(
-                    onPressed: () => _showConfirmationDialog(context, status),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red, // Red color for cancel
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 30, vertical: 10),
-                    ),
-                    child: const Text('Cancel Appointment',
-                        style: TextStyle(fontSize: 16)),
-                  ),
-                ],
+                // if (status == 'pending') ...[
+                //   ElevatedButton(
+                //     onPressed: () => _showConfirmationDialog(context, status),
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: Colors.red, // Red color for cancel
+                //       padding: const EdgeInsets.symmetric(
+                //           horizontal: 30, vertical: 10),
+                //     ),
+                //     child: const Text('Cancel Appointment',
+                //         style: TextStyle(fontSize: 16)),
+                //   ),
+                //   ],
               ],
             ),
           );

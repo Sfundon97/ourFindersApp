@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import for Firebase
-import 'package:firebase_auth/firebase_auth.dart'; // Import for Firebase Auth
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ServiceProviderAppointmentPage extends StatefulWidget {
-  const ServiceProviderAppointmentPage(
-      {super.key, required String companyName});
+  const ServiceProviderAppointmentPage({super.key, required String companyName});
 
   @override
   _ServiceProviderAppointmentPageState createState() =>
@@ -24,8 +23,7 @@ class _ServiceProviderAppointmentPageState
 
       // Fetch company name from Firestore
       DocumentSnapshot providerDoc = await FirebaseFirestore.instance
-          .collection(
-              'Service Provider') // Assuming you have a serviceProviders collection
+          .collection('Service Provider')
           .doc(userId)
           .get();
 
@@ -44,24 +42,19 @@ class _ServiceProviderAppointmentPageState
 
   // Function to fetch recent (pending) appointments for the service provider
   Stream<QuerySnapshot> fetchRecentAppointments() {
-    print('Fetching recent appointments for company: $companyName'); // Debug
     return FirebaseFirestore.instance
         .collection('appointments')
-        .where('companyName', isEqualTo: companyName) // Filter by company name
-        .where('status', isEqualTo: 'pending') // Show only pending appointments
+        .where('companyName', isEqualTo: companyName)
+        .where('status', isEqualTo: 'pending')
         .snapshots();
   }
 
   // Function to fetch appointment history (accepted/rejected) for the service provider
   Stream<QuerySnapshot> fetchAppointmentHistory() {
-    print('Fetching appointment history for company: $companyName'); // Debug
     return FirebaseFirestore.instance
         .collection('appointments')
-        .where('companyName', isEqualTo: companyName) // Filter by company name
-        .where('status', whereIn: [
-      'accepted',
-      'rejected'
-    ]) // Show accepted/rejected bookings
+        .where('companyName', isEqualTo: companyName)
+        .where('status', whereIn: ['accepted', 'rejected'])
         .snapshots();
   }
 
@@ -71,7 +64,7 @@ class _ServiceProviderAppointmentPageState
       await FirebaseFirestore.instance
           .collection('appointments')
           .doc(appointmentId)
-          .update({'status': status}); // Update the appointment status
+          .update({'status': status});
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error updating booking status')),
@@ -147,35 +140,51 @@ class _ServiceProviderAppointmentPageState
           itemCount: snapshot.data!.docs.length,
           itemBuilder: (context, index) {
             DocumentSnapshot appointment = snapshot.data!.docs[index];
-            return Card(
-              child: ListTile(
-                title: Text(
-                    'Reference: ${appointment.id}'), // Use appointment ID as reference
-                subtitle: Text(
-                  'Date: ${appointment['date'].toDate().toString()}\n'
-                  'Service: ${appointment['services'].join(", ")}\n'
-                  'Client: ${appointment['userName']}',
-                ),
-                trailing: isPending
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              updateBookingStatus(appointment.id, 'accepted');
-                            },
-                            child: const Text('Accept'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              updateBookingStatus(appointment.id, 'rejected');
-                            },
-                            child: const Text('Reject'),
-                          ),
-                        ],
-                      )
-                    : Text('Status: ${appointment['status']}'),
-              ),
+            String userId = appointment['userId']; // Assuming userId is stored in each appointment
+            return FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(userId)
+                  .get(),
+              builder: (context, userSnapshot) {
+                if (!userSnapshot.hasData) {
+                  return const ListTile(
+                    title: Text('Loading...'),
+                    subtitle: Text('Loading user data...'),
+                  );
+                }
+                var user = userSnapshot.data?.data() as Map<String, dynamic>?;
+
+                return Card(
+                  child: ListTile(
+                    title: Text('Reference: ${appointment.id}'),
+                    subtitle: Text(
+                      'Date: ${appointment['date'].toDate().toString()}\n'
+                      'Service: ${appointment['services'].join(", ")}\n'
+                      'Client: ${user?['name'] ?? 'No Name'}',
+                    ),
+                    trailing: isPending
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  updateBookingStatus(appointment.id, 'accepted');
+                                },
+                                child: const Text('Accept'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  updateBookingStatus(appointment.id, 'rejected');
+                                },
+                                child: const Text('Reject'),
+                              ),
+                            ],
+                          )
+                        : Text('Status: ${appointment['status']}'),
+                  ),
+                );
+              },
             );
           },
         );

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'Service_Provider/service_provider_login.dart';
-import 'Client/screens/client_login.dart';
+import 'Client/client_login.dart';
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
@@ -55,6 +55,7 @@ class MainPage extends StatelessWidget {
                   ),
                 ),
               ),
+
               const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -64,7 +65,7 @@ class MainPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              const ServiceProviderLoginPage()),
+                              const ServiceProviderLoginPage(),),
                     );
                   },
                   style: ElevatedButton.styleFrom(

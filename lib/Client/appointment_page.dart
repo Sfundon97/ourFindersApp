@@ -1,6 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api
 
-import 'package:finders_v1_1/Client/screens/details.dart';
+import 'package:finders_v1_1/Client/details.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import for Firebase
 import 'package:firebase_auth/firebase_auth.dart'; // Import for Firebase Auth

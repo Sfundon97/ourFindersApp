@@ -1,19 +1,20 @@
 // ignore_for_file: constant_identifier_names, unused_import
 
-import 'package:finders_v1_1/Client/screens/client_home.dart';
-import 'package:finders_v1_1/Client/screens/faqs_page.dart';
+import 'package:finders_v1_1/Client/all_companies.dart';
+import 'package:finders_v1_1/Client/appointment_page.dart';
+import 'package:finders_v1_1/Client/client_details.dart';
+import 'package:finders_v1_1/Client/client_home.dart';
+import 'package:finders_v1_1/Client/client_login.dart';
+import 'package:finders_v1_1/Client/client_pro.dart';
+import 'package:finders_v1_1/Client/client_profile.dart';
+import 'package:finders_v1_1/Client/client_reg.dart';
+import 'package:finders_v1_1/Client/contact_us.dart';
+import 'package:finders_v1_1/Client/faqs_page.dart';
+import 'package:finders_v1_1/Service_Provider/serviceProviderDetails.dart';
 import 'package:finders_v1_1/Service_Provider/service_Appointment.dart';
-import 'package:finders_v1_1/cipc.dart';
-import 'package:finders_v1_1/Client/screens/all_companies.dart';
-
-import 'package:finders_v1_1/Client/screens/client_pro.dart';
-import 'package:finders_v1_1/Client/screens/client_profile.dart';
 import 'package:finders_v1_1/about_us.dart';
-import 'package:finders_v1_1/Client/screens/appointment_page.dart';
-import 'package:finders_v1_1/Client/screens/client_details.dart';
-import 'package:finders_v1_1/Client/screens/client_login.dart';
-import 'package:finders_v1_1/Client/screens/client_reg.dart';
-import 'package:finders_v1_1/Client/screens/contact_us.dart';
+import 'package:finders_v1_1/cipc.dart';
+import 'package:finders_v1_1/services/serviceDetails.dart';
 import 'package:finders_v1_1/splash.dart';
 import 'package:finders_v1_1/main_page.dart';
 import 'package:finders_v1_1/Service_Provider/provider_profile.dart';
@@ -26,6 +27,7 @@ class RouteManager {
   //   a main landing page
   static const String mainPage = '/';
   static const String splash = '/splash';
+  static const String serviceDetailsPage = '/serviceDetailsPage';
   static const String clientHomePage = '/clientHomePage';
   static const String allCompaniesPage = '/allCompaniesPage';
   static const String cipc = '/cipc';
@@ -46,6 +48,7 @@ class RouteManager {
   static const String contactUsPage = '/contactUsPage';
   static const String bookingPage = '/bookingPage';
   static const String faqsPage = '/faqsPage';
+  static const String serviceInfo = '/serviceInfo';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -61,7 +64,15 @@ class RouteManager {
                   companyName: '',
                 ));
       case clientHomePage:
-        return MaterialPageRoute(builder: (context) => const ClientHomePage());
+        return MaterialPageRoute(
+            builder: (context) => const ClientHomePage(
+                  companyName: '',
+                  providerId: '',
+                  serviceProviderId: '',
+                  address: '',
+                  services: [], clientId: '',
+                  //  prices: [],
+                ));
       case clientLoginPage:
         return MaterialPageRoute(builder: (context) => const ClientLoginPage());
       case cipc:
@@ -70,6 +81,12 @@ class RouteManager {
       case clientRegistrationPage:
         return MaterialPageRoute(
             builder: (context) => const ClientRegistrationPage());
+
+      case serviceDetailsPage:
+        return MaterialPageRoute(
+            builder: (context) => const ServiceDetailsPage(
+                  appointmentReference: '',
+                ));
 
       case appointmentPage:
         return MaterialPageRoute(builder: (context) => const AppointmentPage());
@@ -90,7 +107,10 @@ class RouteManager {
             builder: (context) => const PartnerRegistrationPage());
       case serviceProfilePage:
         return MaterialPageRoute(
-            builder: (context) => const ServiceProfilePage());
+            builder: (context) => ServiceProfilePage(
+                  serviceProviderId: '',
+                  companyName: '',
+                ));
       case allCompaniesPage:
         return MaterialPageRoute(
             builder: (context) => const AllCompaniesPage());
@@ -103,6 +123,15 @@ class RouteManager {
         return MaterialPageRoute(builder: (context) => const AboutUsPage());
       case contactUsPage:
         return MaterialPageRoute(builder: (context) => const ContactUsPage());
+      case serviceInfo:
+        return MaterialPageRoute(
+            builder: (context) => ServiceProviderDetailsPage(
+                  companyName: '',
+                  address: '',
+                  services: [],
+                  // prices: [],
+                  serviceProviderId: '',
+                ));
       default:
         throw Exception('Route not found');
     }

@@ -1,11 +1,12 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:finders_v1_1/Client/all_companies.dart';
+import 'package:finders_v1_1/Client/appointment_page.dart';
 import 'package:finders_v1_1/Client/booking.dart';
+import 'package:finders_v1_1/Client/client_profile.dart';
 import 'package:finders_v1_1/Client/contact_us.dart';
 import 'package:finders_v1_1/Client/faqs_page.dart';
-import 'package:finders_v1_1/Service_Provider/provider_profile.dart';
-import 'package:finders_v1_1/Service_Provider/service_Appointment.dart';
+import 'package:finders_v1_1/Reviews/reviewPage.dart';
 import 'package:finders_v1_1/about_us.dart';
 import 'package:finders_v1_1/main_page.dart';
 import 'package:flutter/material.dart';
@@ -13,14 +14,48 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
-class ServiceProviderHome extends StatefulWidget {
-  const ServiceProviderHome({super.key});
+class ClientHomePage extends StatefulWidget {
+  final String companyName;
+  final String address;
+  final List<String> services;
+  //final List<double> prices;
+  final String providerId;
+  final String serviceProviderId;
+  final String clientId;
+ 
+
+  const ClientHomePage(
+      {super.key,
+      required this.companyName,
+      required this.providerId,
+      required this.serviceProviderId,
+      required this.address,
+      required this.services,
+      required this.clientId,
+     
+      // required this.prices}
+      });
+
+  Future<String> fetchUserName(String userId) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(userId)
+          .get();
+      if (userDoc.exists) {
+        return userDoc['username']; // Adjust the field name if necessary
+      }
+    } catch (e) {
+      print("Error fetching username: $e");
+    }
+    return "Unknown User"; // Return a default value if the fetch fails
+  }
 
   @override
-  State<ServiceProviderHome> createState() => _ServiceProviderHomeState();
+  State<ClientHomePage> createState() => _ClientHomePageState();
 }
 
-class _ServiceProviderHomeState extends State<ServiceProviderHome> {
+class _ClientHomePageState extends State<ClientHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   var indexClicked = 0;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -54,46 +89,50 @@ class _ServiceProviderHomeState extends State<ServiceProviderHome> {
     return _firestore.collection('Service Provider').snapshots();
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
+  @override
+  void initState() {
+    super.initState();
 
-  //  getRecentImageUrl(providerId);
-  // }
+    fetchImages();
+  }
 
-  // Function to get recent image URL for each service provider
-  Future<String?> getRecentImageUrl(String providerId) async {
-    final imagesSnapshot = await _firestore
-        .collection('Service Provider')
-        .doc(providerId)
-        .collection(
-            'images') // assuming 'images' is a sub-collection for images
-        .orderBy('timestamp', descending: true)
-        .limit(1)
-        .get();
+  void fetchImages() async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Service Provider')
+          .where('companyName', isEqualTo: widget.companyName)
+          .get();
 
-    if (imagesSnapshot.docs.isNotEmpty) {
-      return imagesSnapshot.docs.first['url'];
+      List<String> urls = [];
+      for (var doc in snapshot.docs) {
+        List<dynamic> urlsFromDoc = doc['url'] as List<dynamic>? ?? [];
+        urls.addAll(urlsFromDoc.map((url) => url.toString()).toList());
+      }
+
+      setState(() {
+        imageUrls = urls;
+      });
+    } catch (e) {
+      print("Failed to fetch images: $e");
     }
-    return null;
   }
 
 //back fill the missing fields
-  Future<void> backfillServiceProviderFields() async {
-    final serviceProviders =
-        await _firestore.collection('Service Provider').get();
+  // Future<void> backfillServiceProviderFields() async {
+  //   final serviceProviders =
+  //       await _firestore.collection('Service Provider').get();
 
-    for (var doc in serviceProviders.docs) {
-      final data = doc.data();
-      if (data['totalRating'] == null || data['ratingCount'] == null) {
-        await _firestore.collection('Service Provider').doc(doc.id).update({
-          'totalRating': data['totalRating'] ?? 0,
-          'ratingCount': data['ratingCount'] ?? 0,
-        });
-        print("Backfilled fields for provider ID: ${doc.id}");
-      }
-    }
-  }
+  //   for (var doc in serviceProviders.docs) {
+  //     final data = doc.data();
+  //     if (data['totalRating'] == null || data['ratingCount'] == null) {
+  //       await _firestore.collection('Service Provider').doc(doc.id).update({
+  //         'totalRating': data['totalRating'] ?? 0,
+  //         'ratingCount': data['ratingCount'] ?? 0,
+  //       });
+  //       print("Backfilled fields for provider ID: ${doc.id}");
+  //     }
+  //   }
+  // }
 
   late final List<Widget> screens = [
     StreamBuilder<QuerySnapshot>(
@@ -124,7 +163,52 @@ class _ServiceProviderHomeState extends State<ServiceProviderHome> {
                   children: [
                     Text('Service: ${serviceProvider['service']}'),
                     Text('Email: ${serviceProvider['email']}'),
-                   
+                    // imageUrls.isEmpty
+                    //     ? Column(
+                    //         children: [
+                    //           Text("No images available."),
+                    //           SizedBox(height: 10),
+                    //           // ElevatedButton(
+                    //           //   onPressed: () {
+                    //           //     Navigator.push(
+                    //           //       context,
+                    //           //       MaterialPageRoute(
+                    //           //         builder: (context) => UploadPage(),
+                    //           //       ),
+                    //           //     );
+                    //           //   },
+                    //           //   child: Text("Upload Image"),
+                    //           // ),
+                    //         ],
+                    //       )
+                    //     : Container(
+                    //         height: 300,
+                    //         padding: EdgeInsets.all(4.0),
+                    //         decoration: BoxDecoration(
+                    //           borderRadius: BorderRadius.circular(8.0),
+                    //           border: Border.all(
+                    //               color: Colors.blueAccent, width: 2),
+                    //         ),
+                    //         child: GridView.builder(
+                    //           gridDelegate:
+                    //               SliverGridDelegateWithFixedCrossAxisCount(
+                    //             crossAxisCount: 2,
+                    //             mainAxisSpacing: 4,
+                    //             crossAxisSpacing: 4,
+                    //           ),
+                    //           itemCount: imageUrls.length,
+                    //           itemBuilder: (context, index) {
+                    //             return ClipRRect(
+                    //               borderRadius: BorderRadius.circular(8.0),
+                    //               child: Image.network(
+                    //                 imageUrls[index],
+                    //                 fit: BoxFit.cover,
+                    //               ),
+                    //             );
+                    //           },
+                    //         ),
+                    //       ),
+
                     Text('Address: ${serviceProvider['address']}'),
                   ],
                 ),
@@ -141,11 +225,11 @@ class _ServiceProviderHomeState extends State<ServiceProviderHome> {
       },
     ),
     const Center(child: AllCompaniesPage()),
-    //const Center(child: AppointmentPage()),
-    const Center(
-        child: ServiceProviderAppointmentPage(
-      companyName: '',
-    )),
+    const Center(child: AppointmentPage()),
+    // const Center(
+    //  child: ServiceProviderAppointmentPage(
+    // companyName: '',
+
     const Center(child: ContactUsPage()),
   ];
 
@@ -160,11 +244,7 @@ class _ServiceProviderHomeState extends State<ServiceProviderHome> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (context) => ServiceProfilePage(
-                        serviceProviderId: '',
-                        companyName: '',
-                      )),
+              MaterialPageRoute(builder: (context) => ProfilePage()),
             );
           },
           child: const Padding(
@@ -344,9 +424,24 @@ class _ServiceProviderHomeState extends State<ServiceProviderHome> {
                         elevation: 4,
                         margin: const EdgeInsets.all(8),
                         child: ListTile(
-                          leading: const CircleAvatar(
-                            backgroundImage: NetworkImage(
-                              'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOuxrvcNMfGLh73uKP1QqYpKoCB0JLXiBMvA&s',
+                          leading: GestureDetector(
+                            onTap: () {
+                              String clientId = '';
+                              String serviceProviderId = '';
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => ReviewPage(
+                                            clientId: clientId,
+                                            serviceProviderId:
+                                                serviceProviderId,
+                                            username: '',
+                                          )));
+                            },
+                            child: const CircleAvatar(
+                              backgroundImage: NetworkImage(
+                                'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOuxrvcNMfGLh73uKP1QqYpKoCB0JLXiBMvA&s',
+                              ),
                             ),
                           ),
                           title: Expanded(
@@ -359,9 +454,7 @@ class _ServiceProviderHomeState extends State<ServiceProviderHome> {
                                     width: 10,
                                   ),
                                   Padding(
-                                    padding: const EdgeInsets.only(
-                                      right: 8.0,
-                                    ),
+                                    padding: const EdgeInsets.only(right: 8.0),
                                     child: RatingBar.builder(
                                       itemSize: 15,
                                       initialRating: (serviceProvider.data()
@@ -421,43 +514,50 @@ class _ServiceProviderHomeState extends State<ServiceProviderHome> {
                               Text('Address: ${serviceProvider['address']}'),
                             ],
                           ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.info),
-                            onPressed: () {
-                              // Navigate to the BookingPage with service provider details
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BookingPage(
-                                    companyName: serviceProvider['companyName'],
-                                    address: serviceProvider['address'],
-                                    // Change this part to check if 'services' is a String or List
-                                    services: serviceProvider['service'] is List
-                                        ? List<String>.from(
-                                            serviceProvider['service'])
-                                        : [serviceProvider['service']],
-                                    // Adjust this part similarly for 'prices'
-                                    prices: serviceProvider['price'] is List
-                                        ? List<double>.from(
-                                            serviceProvider['price'].map(
-                                                (price) => price is int
-                                                    ? price.toDouble()
-                                                    : price))
-                                        : [
-                                            serviceProvider['price'] is int
-                                                ? serviceProvider['price']
-                                                    .toDouble()
-                                                : serviceProvider['price']
-                                          ],
-                                    serviceProviderId:
-                                        serviceProvider['serviceProviderId'],
-                                    providerId:
-                                        serviceProvider['serviceProviderId'],
-                                    quantities: [],
-                                  ),
-                                ),
-                              );
-                            },
+                          trailing: Column(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.info),
+                                onPressed: () {
+                                  // Navigate to the BookingPage with service provider details
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => BookingPage(
+                                        companyName:
+                                            serviceProvider['companyName'],
+                                        address: serviceProvider['address'],
+                                        // Change this part to check if 'services' is a String or List
+                                        services:
+                                            serviceProvider['service'] is List
+                                                ? List<String>.from(
+                                                    serviceProvider['service'])
+                                                : [serviceProvider['service']],
+                                        // Adjust this part similarly for 'prices'
+                                        prices: serviceProvider['price'] is List
+                                            ? List<double>.from(
+                                                serviceProvider['price'].map(
+                                                    (price) => price is int
+                                                        ? price.toDouble()
+                                                        : price))
+                                            : [
+                                                serviceProvider['price'] is int
+                                                    ? serviceProvider['price']
+                                                        .toDouble()
+                                                    : serviceProvider['price']
+                                              ],
+                                        serviceProviderId: serviceProvider[
+                                            'serviceProviderId'],
+                                        providerId: serviceProvider[
+                                            'serviceProviderId'],
+                                        quantities: [],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              
+                            ],
                           ),
                         ),
                       );
@@ -470,8 +570,6 @@ class _ServiceProviderHomeState extends State<ServiceProviderHome> {
             Expanded(child: screens[indexClicked]),
         ],
       ),
-
-      
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.blue,
         items: const [

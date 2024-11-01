@@ -36,6 +36,9 @@ class _ServiceProviderLoginPageState extends State<ServiceProviderLoginPage> {
 
         // On successful login, navigate to the Service Provider Home Page
         Navigator.pushReplacementNamed(context, '/serviceProviderHomePage');
+        // MaterialPageRoute(
+        //                   builder: (context) =>
+        //                       const UploadPage(serviceProviderId: 'serviceProviderId',),);
       } catch (e) {
         setState(() {
           _errorMessage = e.toString();
