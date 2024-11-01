@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart'; // Import the uuid package
 
 class PartnerRegistrationPage extends StatefulWidget {
-  const PartnerRegistrationPage({Key? key}) : super(key: key);
+  const PartnerRegistrationPage({super.key});
 
   @override
   _PartnerRegistrationPageState createState() => _PartnerRegistrationPageState();
